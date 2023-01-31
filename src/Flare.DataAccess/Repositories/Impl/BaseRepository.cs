@@ -14,20 +14,45 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
         _dbSet = context.Set<TEntity>();
     }
 
-    public async Task<TEntity> AddAsync(TEntity entity)
+    public async Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? filter = null,
+        Expression<Func<TEntity, bool>>? orderBy  = null,
+        params Expression<Func<TEntity, object>>[]? includeProperties)
     {
-        await _dbSet.AddAsync(entity);
-        await _context.SaveChangesAsync();
-        return entity;
-    }
+        IQueryable<TEntity> query = _dbSet.AsNoTracking().AsSplitQuery();
 
-    public async Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>> filter)
-        =>  await _dbSet.Where(filter).ToListAsync();
+        if (filter != null) await query.Where(filter).ToListAsync();
+
+        if (includeProperties != null)
+        {
+            foreach (var property in includeProperties)
+            {
+                query.Include(property);
+            }
+        }
+
+        return (orderBy != null)
+            ? await _dbSet.OrderBy(orderBy).ToListAsync()
+            : await _dbSet.ToListAsync();
+    }
 
     public async Task<TEntity> GetAsync(Expression<Func<TEntity, bool>> filter)
     {
         var entity = await _dbSet.FirstOrDefaultAsync(filter);
         if (entity == null) throw new NullReferenceException();
+
+        return entity;
+    }
+
+    public async Task<TEntity> GetWithIncludeAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, object>> includeProperty)
+    {
+        var entity = await _dbSet.Include(includeProperty).FirstOrDefaultAsync(filter);
+        if (entity == null) throw new NullReferenceException();
+        return entity;
+    }
+
+    public async Task<TEntity> AddAsync(TEntity entity)
+    {
+        await _dbSet.AddAsync(entity);
         return entity;
     }
 

@@ -9,6 +9,8 @@ public static class DataAccessDependencyInjection
     public static IServiceCollection AddDataAccessLayer(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDatabase(configuration);
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
         return services;
     }
 

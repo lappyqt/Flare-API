@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Flare.DataAccess.Migrations
+namespace Flare.DataAccess.Persistence.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
     partial class DatabaseContextModelSnapshot : ModelSnapshot
@@ -111,6 +111,8 @@ namespace Flare.DataAccess.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("PostId");
+
                     b.ToTable("Comments");
                 });
 
@@ -142,12 +144,11 @@ namespace Flare.DataAccess.Migrations
                     b.Property<int>("Downloads")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Orientation")
+                        .HasColumnType("integer");
+
                     b.Property<List<string>>("Tags")
                         .HasColumnType("text[]");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
@@ -161,6 +162,22 @@ namespace Flare.DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Posts");
+                });
+
+            modelBuilder.Entity("Flare.Domain.Entities.Comment", b =>
+                {
+                    b.HasOne("Flare.Domain.Entities.Post", "Post")
+                        .WithMany("Comments")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+                });
+
+            modelBuilder.Entity("Flare.Domain.Entities.Post", b =>
+                {
+                    b.Navigation("Comments");
                 });
 #pragma warning restore 612, 618
         }
