@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
 
 namespace Flare.Application.Services.Impl;
 
@@ -11,7 +14,7 @@ public class FileHandlingService : IFileHandlingService
     public FileHandlingService(IWebHostEnvironment environment)
     {
         _environment = environment;
-        _filesDirectory = Path.Combine(_environment.WebRootPath, "files");
+        _filesDirectory = _environment.WebRootPath;
     }
 
     public void CreateDirectory(string path)
@@ -41,12 +44,12 @@ public class FileHandlingService : IFileHandlingService
 
     public async Task UploadFileAsync(IFormFile file, string path)
     {
-        string fullPath = Path.Combine(_environment.ContentRootPath, path);
+        string fullPath = Path.Combine(_filesDirectory, path);
 
         if (file.Length > 0)
         {
             await using var stream = new FileStream(fullPath, FileMode.Create);
-            await stream.CopyToAsync(stream);
+            await file.CopyToAsync(stream);
         }
     }
 }

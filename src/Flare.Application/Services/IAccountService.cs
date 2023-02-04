@@ -8,5 +8,6 @@ public interface IAccountService
 	Task<LoginAccountResponseModel> LoginAsync(LoginAccountModel loginAccountModel);
 	Task<ConfirmEmailResponseModel> ConfirmEmailAsync(ConfirmEmailModel confirmEmailModel);
 	Task<ForgotPasswordResponseModel> ForgotPasswordAsync(ForgotPasswordModel forgotPasswordModel);
-	Task<PasswordResetResponseModel> PasswordResetAsync(PasswordResetModel passwordResetModel);
+	Task<ResetPasswordResponseModel> ResetPasswordAsync(ResetPasswordModel resetPasswordModel);
+    Task<DeleteAccountResponseModel> DeleteAccountAsync(DeleteAccountModel deleteAccountModel);
 }

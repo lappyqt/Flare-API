@@ -4,6 +4,9 @@ namespace Flare.Application.Models.Post;
 
 public class UpdatePostModel
 {
+    [Required]
+    public Guid Id { get; set; }
+
     [MaxLength(500)]
     public string Description { get; set; } = String.Empty;
 

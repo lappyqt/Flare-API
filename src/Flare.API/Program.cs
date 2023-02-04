@@ -1,10 +1,14 @@
 using System.Text.Json.Serialization;
 using Flare.API;
 using Flare.Application;
-using Flare.Application.Services.Impl;
 using Flare.DataAccess;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDataAccessLayer(builder.Configuration);
+builder.Services.AddApplicationLayer(builder.Configuration);
+builder.Services.AddApiLayer(builder.Configuration);
 
 builder.Services.AddControllers().AddJsonOptions(x =>
 {
@@ -14,11 +18,32 @@ builder.Services.AddControllers().AddJsonOptions(x =>
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(x =>
+{
+    x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header
+    });
 
-builder.Services.AddDataAccessLayer(builder.Configuration);
-builder.Services.AddApplicationLayer(builder.Configuration);
-builder.Services.AddApiLayer(builder.Configuration);
+    x.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 
 var app = builder.Build();
 
@@ -35,6 +60,13 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseCors(x =>
+{
+    x.AllowAnyOrigin();
+    x.AllowAnyHeader();
+    x.AllowAnyMethod();
+});
 
 app.MapControllers();
 

@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Security.Claims;
+using AutoMapper;
 using Flare.Application.Models.Post;
 using Flare.DataAccess;
-using Flare.DataAccess.Persistence;
 using Flare.Domain.Entities;
 using Flare.Domain.Enums;
 using Microsoft.AspNetCore.Http;
@@ -14,12 +14,14 @@ public class PostService : IPostService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IFileHandlingService _fileService;
     private readonly IHttpContextAccessor _accessor;
+    private readonly IMapper _mapper;
 
-    public PostService(IUnitOfWork unitOfWork, IFileHandlingService fileService, IHttpContextAccessor accessor)
+    public PostService(IUnitOfWork unitOfWork, IFileHandlingService fileService, IHttpContextAccessor accessor, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _fileService = fileService;
         _accessor = accessor;
+        _mapper = mapper;
     }
 
     public Task<Post> GetAsync(Guid id)
@@ -49,7 +51,7 @@ public class PostService : IPostService
 
         Guid id = Guid.NewGuid();
         string contentExtension = Path.GetExtension(createPostModel.Content.FileName);
-        string contentPath = Path.Combine(createdBy, id.ToString(), contentExtension);
+        string contentPath = Path.Combine("files", createdBy, id.ToString() + contentExtension);
 
         var post = new Post
         {
@@ -73,13 +75,32 @@ public class PostService : IPostService
         return new CreatePostResponseModel { Id = post.Id };
     }
 
-    public Task<UpdatePostResponseModel> UpdatePostAsync(UpdatePostModel updatePostModel)
+    public async Task<UpdatePostResponseModel> UpdatePostAsync(UpdatePostModel updatePostModel)
     {
-        throw new NotImplementedException();
+        var post = await _unitOfWork.Posts.GetAsync(x => x.Id == updatePostModel.Id);
+        var accountName = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name);
+
+        if (post == null) throw new Exception("Post not found");
+        if (accountName != post.CreatedBy) throw new Exception("Incorrect author of the post");
+
+        var updatedPost = _mapper.Map(updatePostModel, post);
+        updatedPost.UpdatedOn = DateTime.UtcNow;
+
+        await _unitOfWork.Posts.UpdateAsync(updatedPost);
+
+        return new UpdatePostResponseModel { Id = updatedPost.Id };
     }
 
-    public Task<DeletePostResponseModel> DeletePostAsync(DeletePostModel deletePostModel)
+    public async Task<DeletePostResponseModel> DeletePostAsync(DeletePostModel deletePostModel)
     {
-        throw new NotImplementedException();
+        var post = await _unitOfWork.Posts.GetAsync(x => x.Id == deletePostModel.Id);
+        var accountName = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name);
+
+        if (post == null) throw new Exception("Post not found");
+        if (accountName != post.CreatedBy) throw new Exception("Incorrect author of the post");
+
+        await _unitOfWork.Posts.RemoveAsync(post);
+        _fileService.DeleteFile(post.ContentPath);
+        return new DeletePostResponseModel { Id = post.Id };
     }
 }

@@ -18,21 +18,22 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
         Expression<Func<TEntity, bool>>? orderBy  = null,
         params Expression<Func<TEntity, object>>[]? includeProperties)
     {
+
         IQueryable<TEntity> query = _dbSet.AsNoTracking().AsSplitQuery();
 
-        if (filter != null) await query.Where(filter).ToListAsync();
+        if (filter != null) query = query.Where(filter);
 
         if (includeProperties != null)
         {
             foreach (var property in includeProperties)
             {
-                query.Include(property);
+                query = query.Include(property);
             }
         }
 
-        return (orderBy != null)
-            ? await _dbSet.OrderBy(orderBy).ToListAsync()
-            : await _dbSet.ToListAsync();
+        if (orderBy != null) query = query.OrderBy(orderBy);
+
+        return await query.ToListAsync();
     }
 
     public async Task<TEntity> GetAsync(Expression<Func<TEntity, bool>> filter)
@@ -53,6 +54,7 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     public async Task<TEntity> AddAsync(TEntity entity)
     {
         await _dbSet.AddAsync(entity);
+        await _context.SaveChangesAsync();
         return entity;
     }
 

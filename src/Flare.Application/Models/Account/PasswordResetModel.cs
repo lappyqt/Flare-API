@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Flare.Application.Models.Account;
 
-public class PasswordResetModel
+public class ResetPasswordModel
 {
 	[Required]
 	public string Token { get; set; } = String.Empty;
@@ -14,4 +14,4 @@ public class PasswordResetModel
 	public string ConfirmPassword { get; set; } = String.Empty;
 }
 
-public class PasswordResetResponseModel : BaseResponseModel {}
+public class ResetPasswordResponseModel : BaseResponseModel {}

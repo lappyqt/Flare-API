@@ -5,13 +5,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Helpers" />
     <Folder Include="Models\Category" />
     <Folder Include="Models\Comment" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.13" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
   </ItemGroup>
 
   <PropertyGroup>

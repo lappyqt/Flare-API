@@ -1,8 +1,10 @@
+using System.Security.Claims;
 using Flare.DataAccess;
 using Flare.DataAccess.Persistence;
 using Flare.Application.Helpers;
 using Flare.Application.Models.Account;
 using Flare.Domain.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 
 namespace Flare.Application.Services.Impl;
@@ -12,12 +14,14 @@ public class AccountService : IAccountService
     private readonly IUnitOfWork _unitOfWork;
 	private readonly IConfiguration _configuration;
     private readonly IFileHandlingService _fileService;
+    private readonly IHttpContextAccessor _accessor;
 
-	public AccountService(DatabaseContext context, IConfiguration configuration, IFileHandlingService fileService)
+	public AccountService(IUnitOfWork unitOfWork, IConfiguration configuration, IFileHandlingService fileService, IHttpContextAccessor accessor)
 	{
-		_unitOfWork = new UnitOfWork(context);
+		_unitOfWork = unitOfWork;
 		_configuration = configuration;
         _fileService = fileService;
+        _accessor = accessor;
 	}
 
 	public async Task<CreateAccountResponseModel> CreateAccountAsync(CreateAccountModel createAccountModel)
@@ -35,7 +39,7 @@ public class AccountService : IAccountService
 		};
 
 		await _unitOfWork.Accounts.AddAsync(account);
-        _fileService.CreateDirectory(account.Username);
+        _fileService.CreateDirectory(Path.Combine("files", account.Username));
 
 		return new CreateAccountResponseModel { Id = account.Id };
 	}
@@ -83,14 +87,14 @@ public class AccountService : IAccountService
 		return new ForgotPasswordResponseModel { Id = account.Id};
 	}
 
-	public async Task<PasswordResetResponseModel> PasswordResetAsync(PasswordResetModel passwordResetModel)
+	public async Task<ResetPasswordResponseModel> ResetPasswordAsync(ResetPasswordModel resetPasswordModel)
 	{
-		var account = await _unitOfWork.Accounts.GetAsync(x => x.PasswordResetToken == passwordResetModel.Token);
+		var account = await _unitOfWork.Accounts.GetAsync(x => x.PasswordResetToken == resetPasswordModel.Token);
 
 		if (account == null) throw new Exception("Account not found");
 		if (account.ResetTokenExpires < DateTime.UtcNow) throw new Exception("Token expired or invalid");
 
-		PasswordHashing.CreatePasswordHash(passwordResetModel.Password, out byte[] passwordHash, out byte[] passwordSalt);
+		PasswordHashing.CreatePasswordHash(resetPasswordModel.Password, out byte[] passwordHash, out byte[] passwordSalt);
 
 		account.PasswordHash = passwordHash;
 		account.PasswordSalt = passwordSalt;
@@ -98,6 +102,20 @@ public class AccountService : IAccountService
 		account.ResetTokenExpires = null;
 
 		await _unitOfWork.Accounts.UpdateAsync(account);
-		return new PasswordResetResponseModel { Id = account.Id };
+		return new ResetPasswordResponseModel { Id = account.Id };
 	}
+
+    public async Task<DeleteAccountResponseModel> DeleteAccountAsync(DeleteAccountModel deleteAccountModel)
+    {
+        var account = await _unitOfWork.Accounts.GetAsync(x => x.Id == deleteAccountModel.Id);
+        var username = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name);
+
+        if (account == null) throw new Exception("Account not found");
+        if (account.Username != username) throw new Exception("Only owner of account can delete it");
+
+        await _unitOfWork.Accounts.RemoveAsync(account);
+        _fileService.DeleteDirectory(Path.Combine("files", account.Username));
+
+        return new DeleteAccountResponseModel { Id = account.Id };
+    }
 }
