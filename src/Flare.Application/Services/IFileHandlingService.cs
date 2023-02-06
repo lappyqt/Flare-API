@@ -1,3 +1,4 @@
+using Flare.Domain.Entities;
 using Microsoft.AspNetCore.Http;
 
 namespace Flare.Application.Services;
@@ -8,4 +9,5 @@ public interface IFileHandlingService
     void DeleteDirectory(string path);
     void DeleteFile(string path);
     Task UploadFileAsync(IFormFile file, string path);
+    Task UploadImageAsync(IFormFile file, Urls urls);
 }

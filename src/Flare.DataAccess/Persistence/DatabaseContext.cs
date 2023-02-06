@@ -16,6 +16,9 @@ public class DatabaseContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Post>().HasKey(x => x.Id);
+        modelBuilder.Entity<Post>().OwnsOne(x => x.Urls);
+
         modelBuilder.Entity<Account>().HasIndex(x => x.Email).IsUnique();
         modelBuilder.Entity<Account>().HasIndex(x => x.Username).IsUnique();
     }

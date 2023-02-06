@@ -50,14 +50,20 @@ public class PostService : IPostService
         if (createdBy == null) throw new Exception("Author of a post is undefined");
 
         Guid id = Guid.NewGuid();
-        string contentExtension = Path.GetExtension(createPostModel.Content.FileName);
-        string contentPath = Path.Combine("files", createdBy, id.ToString() + contentExtension);
+        string directoryPath = Path.Combine("files", createdBy, id.ToString());
+
+        var urls = new Urls
+        {
+            Original = Path.Combine(directoryPath, "original.jpg"),
+            Fullscreen = Path.Combine(directoryPath, "fullscreen.jpg"),
+            Thumbnail = Path.Combine(directoryPath, "thumbnail.jpg")
+        };
 
         var post = new Post
         {
             Id = id,
             Description = createPostModel.Description,
-            ContentPath = contentPath,
+            Urls = urls ,
             Orientation = createPostModel.Orientation,
             Type = createPostModel.Type,
             Category = createPostModel.Category,
@@ -70,7 +76,8 @@ public class PostService : IPostService
         };
 
         await _unitOfWork.Posts.AddAsync(post);
-        await _fileService.UploadFileAsync(createPostModel.Content, post.ContentPath);
+        _fileService.CreateDirectory(directoryPath);
+        await _fileService.UploadImageAsync(createPostModel.Content, post.Urls);
 
         return new CreatePostResponseModel { Id = post.Id };
     }
@@ -100,7 +107,7 @@ public class PostService : IPostService
         if (accountName != post.CreatedBy) throw new Exception("Incorrect author of the post");
 
         await _unitOfWork.Posts.RemoveAsync(post);
-        _fileService.DeleteFile(post.ContentPath);
+        _fileService.DeleteDirectory(Path.GetDirectoryName(post.Urls.Original)!);
         return new DeletePostResponseModel { Id = post.Id };
     }
 }

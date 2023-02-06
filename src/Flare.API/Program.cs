@@ -2,7 +2,8 @@ using System.Text.Json.Serialization;
 using Flare.API;
 using Flare.Application;
 using Flare.DataAccess;
-using Microsoft.OpenApi.Models;
+
+DotNetEnv.Env.Load("../");
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,32 +19,6 @@ builder.Services.AddControllers().AddJsonOptions(x =>
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(x =>
-{
-    x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header
-    });
-
-    x.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
-});
 
 var app = builder.Build();
 

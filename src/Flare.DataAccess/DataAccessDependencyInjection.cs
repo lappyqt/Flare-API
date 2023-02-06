@@ -15,7 +15,13 @@ public static class DataAccessDependencyInjection
     }
 
     private static void AddDatabase(this IServiceCollection services, IConfiguration configuration) {
+        var host = configuration["PGHOST"];
+        var port = configuration["PGPORT"];
+        var database = configuration["PGDATABASE"];
+        var username = configuration["PGUSER"];
+        var password = configuration["PGPASSWORD"];
+
         services.AddDbContext<DatabaseContext>(options =>
-                options.UseNpgsql(configuration.GetConnectionString("Database")));
+            options.UseNpgsql($"Host = {host}; Port = {port}; Database = {database}; Username = {username}; Password = {password};"));
     }
 }

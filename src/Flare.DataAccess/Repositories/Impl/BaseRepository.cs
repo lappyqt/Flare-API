@@ -15,7 +15,7 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
     }
 
     public async Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? filter = null,
-        Expression<Func<TEntity, bool>>? orderBy  = null,
+        Expression<Func<TEntity, object>>? orderBy  = null,
         params Expression<Func<TEntity, object>>[]? includeProperties)
     {
 

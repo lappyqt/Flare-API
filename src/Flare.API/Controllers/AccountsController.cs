@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Flare.Application.Models.Account;
 using Flare.Application.Services;
 using Microsoft.AspNetCore.Authorization;
