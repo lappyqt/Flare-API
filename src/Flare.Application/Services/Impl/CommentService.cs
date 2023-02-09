@@ -49,7 +49,8 @@ public class CommentService : ICommentService
         {
             Id = comment.Id,
             Text = updateCommentModel.Text,
-            CreatedBy = comment.CreatedBy
+            CreatedBy = comment.CreatedBy,
+            UpdatedOn = DateTime.Now
         };
 
         await _unitOfWork.Comments.UpdateAsync(updatedComment);

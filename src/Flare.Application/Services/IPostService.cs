@@ -7,7 +7,7 @@ namespace Flare.Application.Services;
 public interface IPostService
 {
     Task<Post> GetAsync(Guid id);
-    Task<List<Post>> GetAllAsync(ContentType? type = null, string? category = null);
+    Task<List<Post>> GetAllAsync(PostParameters postParameters);
     Task<CreatePostResponseModel> CreatePostAsync(CreatePostModel createPostModel);
     Task<UpdatePostResponseModel> UpdatePostAsync(UpdatePostModel updatePostModel);
     Task<DeletePostResponseModel> DeletePostAsync(DeletePostModel deletePostModel);

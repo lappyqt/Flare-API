@@ -27,9 +27,9 @@ public class PostsController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> GetAllPostsAsync([FromQuery] ContentType? type = null, [FromQuery] string? category = null)
+    public async Task<IActionResult> GetAllPostsAsync([FromQuery] PostParameters postParameters)
     {
-        return Ok(await _service.GetAllAsync(type, category));
+        return Ok(await _service.GetAllAsync(postParameters));
     }
 
     [HttpPost]

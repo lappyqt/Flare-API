@@ -4,7 +4,6 @@ using AutoMapper;
 using Flare.Application.Models.Post;
 using Flare.DataAccess;
 using Flare.Domain.Entities;
-using Flare.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 
 namespace Flare.Application.Services.Impl;
@@ -24,23 +23,28 @@ public class PostService : IPostService
         _mapper = mapper;
     }
 
-    public Task<Post> GetAsync(Guid id)
+    public async Task<Post> GetAsync(Guid id)
     {
-        var post = _unitOfWork.Posts.GetWithIncludeAsync(x => x.Id == id,  x => x.Comments!);
+        var post = await _unitOfWork.Posts.GetWithIncludeAsync(x => x.Id == id,  x => x.Comments!);
         if (post == null) throw new Exception("Post not found");
 
         return post;
     }
 
-    public async Task<List<Post>> GetAllAsync(ContentType? type = null, string? category = null)
+    public async Task<List<Post>> GetAllAsync(PostParameters postParameters)
     {
-        if (type == null && category == null) return await _unitOfWork.Posts.GetAllAsync();
+        var posts = postParameters is { Category: {}, Type: {} }
+            ? await _unitOfWork.Posts.GetAllAsync(x => x.Type == postParameters.Type && x.Category == postParameters.Category, orderByDescending: x => x.CreatedOn)
+            : await _unitOfWork.Posts.GetAllAsync(x => x.Type == postParameters.Type || x.Category == postParameters.Category, orderByDescending: x => x.CreatedOn);
 
-        var posts = (category != null && type != null)
-            ? await _unitOfWork.Posts.GetAllAsync(x => x.Type == type && x.Category == category)
-            : await _unitOfWork.Posts.GetAllAsync(x => x.Type == type || x.Category == category);
+        if (postParameters.Type == null && postParameters.Category == null)
+        {
+            posts = await _unitOfWork.Posts.GetAllAsync(orderByDescending: x => x.CreatedOn);
+        }
 
-        return posts;
+        posts = posts.Skip((postParameters.Page - 1) * postParameters.PageSize).Take(postParameters.PageSize);
+
+        return posts.ToList();
     }
 
     public async Task<CreatePostResponseModel> CreatePostAsync(CreatePostModel createPostModel)
@@ -94,7 +98,6 @@ public class PostService : IPostService
         updatedPost.UpdatedOn = DateTime.UtcNow;
 
         await _unitOfWork.Posts.UpdateAsync(updatedPost);
-
         return new UpdatePostResponseModel { Id = updatedPost.Id };
     }
 
