@@ -66,7 +66,7 @@ public static class ApiDependencyInjection
                             Id = "Bearer"
                         }
                     },
-                        new string[] {}
+                    new string[] {}
                 }
             });
         });

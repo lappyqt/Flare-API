@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Flare.Application.Exceptions;
 using Flare.Application.Models;
 
 namespace Flare.API.Middleware;
@@ -32,14 +33,25 @@ public class ExceptionHandlingMiddleware
 
         HttpResponse response = context.Response;
 
+        var code = StatusCodes.Status500InternalServerError;
+
+        code = exception switch
+        {
+            BadRequestException => StatusCodes.Status400BadRequest,
+            NotFoundException => StatusCodes.Status404NotFound,
+            ForbiddenException => StatusCodes.Status403Forbidden,
+            UnprocessableEntityException => StatusCodes.Status422UnprocessableEntity,
+            _ => code
+        };
+
         response.ContentType = "application/json";
-        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.StatusCode = code;
 
         RequestErrorModel requestError = new RequestErrorModel
         {
             Message = exception.Message,
             StatusCode = response.StatusCode
-        } ;
+        };
 
         string result = JsonSerializer.Serialize(requestError);
         await response.WriteAsJsonAsync(result);

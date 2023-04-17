@@ -11,6 +11,7 @@ public static class ApplicationDependencyInjection
     public static IServiceCollection AddApplicationLayer(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddMapper();
+        services.AddFluentEmail();
         services.AddServices();
         return services;
     }
@@ -20,9 +21,20 @@ public static class ApplicationDependencyInjection
         services.AddAutoMapper(typeof(IMappingProfiles));
     }
 
+    private static void AddFluentEmail(this IServiceCollection services)
+    {
+        var smtpHost = Environment.GetEnvironmentVariable("SMTP_HOST");
+        var smtpUsername = Environment.GetEnvironmentVariable("SMTP_USERNAME");
+        var smtpPassword = Environment.GetEnvironmentVariable("SMTP_PASSWORD");
+
+        services
+            .AddFluentEmail(smtpUsername)
+            .AddSmtpSender(smtpHost, 587, smtpUsername, smtpPassword);
+    }
+
     private static void AddServices(this IServiceCollection services)
     {
-        services.AddScoped<IFileHandlingService, FileHandlingService>();
+        services.AddSingleton<IFileHandlingService, FileHandlingService>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IPostService, PostService>();
         services.AddScoped<ICommentService, CommentService>();

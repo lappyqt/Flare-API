@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Flare.Application.Exceptions;
 using Flare.Application.Models.Comment;
 using Flare.DataAccess;
 using Flare.Domain.Entities;
@@ -21,7 +22,7 @@ public class CommentService : ICommentService
     {
         string? createdBy = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name);
 
-        if (createdBy == null) throw new Exception("Author of a comment is undefined");
+        if (createdBy == null) throw new NotFoundException("Author of a comment is undefined");
 
         var post = await _unitOfWork.Posts.GetAsync(x => x.Id == createCommentModel.PostId);
         var comment = new Comment
@@ -42,8 +43,8 @@ public class CommentService : ICommentService
         var comment = await _unitOfWork.Comments.GetAsync(x => x.Id == updateCommentModel.Id);
         var accountName = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name);
 
-        if (comment == null) throw new Exception("Comment not found");
-        if (accountName != comment.CreatedBy) throw new Exception("Incorrect author of the post");
+        if (comment == null) throw new NotFoundException($"Comment {updateCommentModel.Id} not found");
+        if (accountName != comment.CreatedBy) throw new ForbiddenException("Incorrect author of the post");
 
         var updatedComment = new Comment()
         {
@@ -62,10 +63,10 @@ public class CommentService : ICommentService
         var comment = await _unitOfWork.Comments.GetAsync(x => x.Id == deleteCommentModel.Id);
         var accountName = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name);
 
-        if (comment == null) throw new Exception("Comment not found");
-        if (accountName != comment.CreatedBy) throw new Exception("Incorrect author of the post");
+        if (comment == null) throw new NotFoundException($"Comment {deleteCommentModel.Id} not found");
+        if (accountName != comment.CreatedBy) throw new ForbiddenException("Incorrect author of the post");
 
         await _unitOfWork.Comments.RemoveAsync(comment);
-        return new DeleteCommentResponseModel { Id = comment.Id }; 
+        return new DeleteCommentResponseModel { Id = comment.Id };
     }
 }

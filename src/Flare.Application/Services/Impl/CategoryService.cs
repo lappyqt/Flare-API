@@ -1,3 +1,4 @@
+using Flare.Application.Exceptions;
 using Flare.Application.Models.Category;
 using Flare.DataAccess;
 using Flare.Domain.Entities;
@@ -13,13 +14,19 @@ public class CategoryService : ICategoryService
         _unitOfWork = unitOfWork;
     }
 
+    public async Task<List<Category>> GetAllAsync()
+    {
+        var categories = await _unitOfWork.Categories.GetAllAsync(orderBy: x => x.Name);
+
+        return categories.ToList();
+    }
+
     public async Task<CreateCategoryResponseModel> CreateCategoryAsync(CreateCategoryModel createCategoryModel)
     {
         var category = new Category
         {
             Id = Guid.NewGuid(),
-            Name = createCategoryModel.Name,
-            Type = createCategoryModel.Type
+            Name = createCategoryModel.Name
         };
 
         await _unitOfWork.Categories.AddAsync(category);
@@ -35,7 +42,7 @@ public class CategoryService : ICategoryService
     {
         var category = await _unitOfWork.Categories.GetAsync(x => x.Id == deleteCategoryModel.Id);
 
-        if (category == null) throw new Exception("Category not found");
+        if (category == null) throw new NotFoundException($"Category {deleteCategoryModel.Id} not found");
 
         await _unitOfWork.Categories.RemoveAsync(category);
         return new DeleteCategoryResponseModel { Id = category.Id }; 

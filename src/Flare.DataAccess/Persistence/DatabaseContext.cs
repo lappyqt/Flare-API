@@ -21,5 +21,7 @@ public class DatabaseContext : DbContext
 
         modelBuilder.Entity<Account>().HasIndex(x => x.Email).IsUnique();
         modelBuilder.Entity<Account>().HasIndex(x => x.Username).IsUnique();
+
+        modelBuilder.Entity<Category>().HasIndex(x => x.Name).IsUnique();
     }
 }

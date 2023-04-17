@@ -7,9 +7,6 @@ public class CreateCategoryModel
 {
     [Required, MaxLength(50)]
     public string Name { get; set; } = String.Empty;
-
-    [Required]
-    public ContentType Type { get; set; }
 }
 
 public class CreateCategoryResponseModel : BaseResponseModel

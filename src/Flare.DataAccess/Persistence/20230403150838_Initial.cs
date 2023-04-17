@@ -4,10 +4,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Flare.DataAccess.Persistence.Migrations
+namespace Flare.DataAccess.Persistence
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -36,8 +36,7 @@ namespace Flare.DataAccess.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Type = table.Column<int>(type: "integer", nullable: false)
+                    Name = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -50,7 +49,9 @@ namespace Flare.DataAccess.Persistence.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
-                    ContentPath = table.Column<string>(type: "text", nullable: false),
+                    UrlsOriginal = table.Column<string>(name: "Urls_Original", type: "text", nullable: false),
+                    UrlsFullscreen = table.Column<string>(name: "Urls_Fullscreen", type: "text", nullable: false),
+                    UrlsThumbnail = table.Column<string>(name: "Urls_Thumbnail", type: "text", nullable: false),
                     Orientation = table.Column<int>(type: "integer", nullable: false),
                     Type = table.Column<int>(type: "integer", nullable: false),
                     Category = table.Column<string>(type: "text", nullable: false),
@@ -73,7 +74,7 @@ namespace Flare.DataAccess.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Text = table.Column<string>(type: "text", nullable: false),
                     CreatedBy = table.Column<string>(type: "text", nullable: false),
-                    PostId = table.Column<Guid>(type: "uuid", nullable: false),
+                    PostId = table.Column<Guid>(type: "uuid", nullable: true),
                     CreatedOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
@@ -84,8 +85,7 @@ namespace Flare.DataAccess.Persistence.Migrations
                         name: "FK_Comments_Posts_PostId",
                         column: x => x.PostId,
                         principalTable: "Posts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -98,6 +98,12 @@ namespace Flare.DataAccess.Persistence.Migrations
                 name: "IX_Accounts_Username",
                 table: "Accounts",
                 column: "Username",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Categories_Name",
+                table: "Categories",
+                column: "Name",
                 unique: true);
 
             migrationBuilder.CreateIndex(

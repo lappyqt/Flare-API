@@ -38,19 +38,14 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
         return await query.ToListAsync();
     }
 
-    public virtual async Task<TEntity> GetAsync(Expression<Func<TEntity, bool>> filter)
+    public virtual async Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>> filter)
     {
-        var entity = await _dbSet.FirstOrDefaultAsync(filter);
-        if (entity == null) throw new NullReferenceException();
-
-        return entity;
+        return await _dbSet.FirstOrDefaultAsync(filter);
     }
 
-    public virtual async Task<TEntity> GetWithIncludeAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, object>> includeProperty)
+    public virtual async Task<TEntity?> GetWithIncludeAsync(Expression<Func<TEntity, bool>> filter, Expression<Func<TEntity, object>> includeProperty)
     {
-        var entity = await _dbSet.Include(includeProperty).FirstOrDefaultAsync(filter);
-        if (entity == null) throw new NullReferenceException();
-        return entity;
+        return await _dbSet.Include(includeProperty).FirstOrDefaultAsync(filter);
     }
 
     public virtual async Task<TEntity> AddAsync(TEntity entity)
@@ -66,6 +61,13 @@ public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : 
         await _context.SaveChangesAsync();
         return entity;
     }
+
+    public virtual async Task<ICollection<TEntity>> RemoveRangeAsync(ICollection<TEntity> entities) 
+    {
+        _dbSet.RemoveRange(entities);
+        await _context.SaveChangesAsync();
+        return entities;
+    } 
 
     public virtual async Task<TEntity> UpdateAsync(TEntity entity)
     {

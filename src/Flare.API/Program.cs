@@ -51,3 +51,5 @@ app.UseCors(x =>
 app.MapControllers();
 
 app.Run();
+
+public partial class Program {}

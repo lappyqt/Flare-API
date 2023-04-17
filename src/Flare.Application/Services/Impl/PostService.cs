@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Security.Claims;
 using AutoMapper;
+using Flare.Application.Exceptions;
+using Flare.Application.Helpers;
 using Flare.Application.Models.Post;
 using Flare.DataAccess;
 using Flare.Domain.Entities;
@@ -25,8 +27,8 @@ public class PostService : IPostService
 
     public async Task<Post> GetAsync(Guid id)
     {
-        var post = await _unitOfWork.Posts.GetWithIncludeAsync(x => x.Id == id,  x => x.Comments!);
-        if (post == null) throw new Exception("Post not found");
+        var post = await _unitOfWork.Posts.GetWithIncludeAsync(x => x.Id == id,  x => x.Comments!.OrderByDescending(x => x.CreatedOn));
+        if (post == null) throw new NotFoundException($"Post {id} not found");
 
         return post;
     }
@@ -42,16 +44,14 @@ public class PostService : IPostService
             posts = await _unitOfWork.Posts.GetAllAsync(orderByDescending: x => x.CreatedOn);
         }
 
-        posts = posts.Skip((postParameters.Page - 1) * postParameters.PageSize).Take(postParameters.PageSize);
-
-        return posts.ToList();
+        return PagedList<Post>.ToPagedList(posts, postParameters.Page, postParameters.PageSize);
     }
 
     public async Task<CreatePostResponseModel> CreatePostAsync(CreatePostModel createPostModel)
     {
         string? createdBy = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name);
 
-        if (createdBy == null) throw new Exception("Author of a post is undefined");
+        if (createdBy == null) throw new NotFoundException("Author of a post is undefined");
 
         Guid id = Guid.NewGuid();
         string directoryPath = Path.Combine("files", createdBy, id.ToString());
@@ -91,8 +91,8 @@ public class PostService : IPostService
         var post = await _unitOfWork.Posts.GetAsync(x => x.Id == updatePostModel.Id);
         var accountName = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name);
 
-        if (post == null) throw new Exception("Post not found");
-        if (accountName != post.CreatedBy) throw new Exception("Incorrect author of the post");
+        if (post == null) throw new NotFoundException($"Post {updatePostModel.Id} not found");
+        if (accountName != post.CreatedBy) throw new ForbiddenException("Incorrect author of the post");
 
         var updatedPost = _mapper.Map(updatePostModel, post);
         updatedPost.UpdatedOn = DateTime.UtcNow;
@@ -103,11 +103,12 @@ public class PostService : IPostService
 
     public async Task<DeletePostResponseModel> DeletePostAsync(DeletePostModel deletePostModel)
     {
-        var post = await _unitOfWork.Posts.GetAsync(x => x.Id == deletePostModel.Id);
+        var post = await _unitOfWork.Posts.GetWithIncludeAsync(x => x.Id == deletePostModel.Id, x => x.Comments!);
         var accountName = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name);
 
-        if (post == null) throw new Exception("Post not found");
-        if (accountName != post.CreatedBy) throw new Exception("Incorrect author of the post");
+        if (post == null) throw new NotFoundException($"Post {deletePostModel.Id} not found");
+        if (accountName != post.CreatedBy) throw new ForbiddenException("Incorrect author of the post");
+        if (post.Comments!.Count > 0) await _unitOfWork.Comments.RemoveRangeAsync(post.Comments); 
 
         await _unitOfWork.Posts.RemoveAsync(post);
         _fileService.DeleteDirectory(Path.GetDirectoryName(post.Urls.Original)!);

@@ -17,6 +17,13 @@ public class CategoriesController : ControllerBase
         _service = service;
     }
 
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetAllCategoriesAsync() 
+    {
+        return Ok(await _service.GetAllAsync());
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateCategoryAsync(CreateCategoryModel createCategoryModel)
     {

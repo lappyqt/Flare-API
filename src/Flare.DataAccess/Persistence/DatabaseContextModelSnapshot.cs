@@ -4,24 +4,21 @@ using System.Collections.Generic;
 using Flare.DataAccess.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Flare.DataAccess.Persistence.Migrations
+namespace Flare.DataAccess.Persistence
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20230128194403_InitialCreate")]
-    partial class InitialCreate
+    partial class DatabaseContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.1")
+                .HasAnnotation("ProductVersion", "7.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -81,10 +78,10 @@ namespace Flare.DataAccess.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Categories");
                 });
@@ -102,7 +99,7 @@ namespace Flare.DataAccess.Persistence.Migrations
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("PostId")
+                    b.Property<Guid?>("PostId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Text")
@@ -126,10 +123,6 @@ namespace Flare.DataAccess.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ContentPath")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -171,11 +164,40 @@ namespace Flare.DataAccess.Persistence.Migrations
                 {
                     b.HasOne("Flare.Domain.Entities.Post", "Post")
                         .WithMany("Comments")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PostId");
 
                     b.Navigation("Post");
+                });
+
+            modelBuilder.Entity("Flare.Domain.Entities.Post", b =>
+                {
+                    b.OwnsOne("Flare.Domain.Entities.Urls", "Urls", b1 =>
+                        {
+                            b1.Property<Guid>("PostId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Fullscreen")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("Original")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("Thumbnail")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.HasKey("PostId");
+
+                            b1.ToTable("Posts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PostId");
+                        });
+
+                    b.Navigation("Urls")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Flare.Domain.Entities.Post", b =>
