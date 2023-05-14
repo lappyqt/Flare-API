@@ -17,6 +17,19 @@ public class AccountsController : ControllerBase
         _service = service;
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetAccountAsync(Guid id)
+    {
+        return Ok(await _service.GetAccountAsync(id));
+    }
+
+    [HttpGet("current")]
+    [Authorize]
+    public async Task<IActionResult> GetCurrentAccountAsync()
+    {
+        return Ok(await _service.GetCurrentAccountAsync());
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateAccountAsync(CreateAccountModel createAccountModel)
     {

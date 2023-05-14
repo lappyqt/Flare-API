@@ -27,6 +27,34 @@ public class AccountService : IAccountService
 		_accessor = accessor;
 		_emailService = emailService;
 	}
+	public async Task<GetAccountResponseModel> GetAccountAsync(Guid id)
+	{
+		var account = await _unitOfWork.Accounts.GetAsync(x => x.Id == id);
+
+		if (account == null) throw new NotFoundException($"Account {id} not found"); 
+
+		return new GetAccountResponseModel 
+		{
+			Id = account.Id,
+			Email = account.Email,
+			Username = account.Username
+		};
+	}
+
+	public async Task<GetCurrentAccountResponseModel> GetCurrentAccountAsync()
+	{
+		var id = Guid.Parse(_accessor.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier));
+		var account = await _unitOfWork.Accounts.GetAsync(x => x.Id == id);
+
+		if (account == null) throw new NotFoundException($"Account {id} not found");
+
+		return new GetCurrentAccountResponseModel
+		{
+			Id = account.Id,
+			Email = account.Email,
+			Username = account.Username
+		};
+	}
 
 	public async Task<CreateAccountResponseModel> CreateAccountAsync(CreateAccountModel createAccountModel)
 	{

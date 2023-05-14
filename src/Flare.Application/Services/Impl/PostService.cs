@@ -51,7 +51,7 @@ public class PostService : IPostService
     {
         string? createdBy = _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name);
 
-        if (createdBy == null) throw new NotFoundException("Author of a post is undefined");
+        if (createdBy == null) throw new ForbiddenException("Author of the post is undefined");
 
         Guid id = Guid.NewGuid();
         string directoryPath = Path.Combine("files", createdBy, id.ToString());

@@ -4,6 +4,8 @@ namespace Flare.Application.Services;
 
 public interface IAccountService
 {
+	Task<GetAccountResponseModel> GetAccountAsync(Guid id);
+	Task<GetCurrentAccountResponseModel> GetCurrentAccountAsync();
 	Task<CreateAccountResponseModel> CreateAccountAsync(CreateAccountModel createAccountModel);
 	Task<LoginAccountResponseModel> LoginAsync(LoginAccountModel loginAccountModel);
 	Task<ConfirmEmailResponseModel> ConfirmEmailAsync(ConfirmEmailModel confirmEmailModel);

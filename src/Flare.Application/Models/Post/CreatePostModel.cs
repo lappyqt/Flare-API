@@ -11,7 +11,7 @@ public class CreatePostModel
     public string Description { get; set; } = string.Empty;
 
     [Required, ImageFileSignature, MaxFileSize(20 * 1024 * 1024)]
-    public IFormFile Content { get; set; }
+    public IFormFile? Content { get; set; }
 
     [Required]
     public Orientation Orientation { get; set; }
